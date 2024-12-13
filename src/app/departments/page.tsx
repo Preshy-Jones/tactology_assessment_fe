@@ -11,6 +11,7 @@ import {
   DELETE_DEPARTMENT_MUTATION,
 } from "@/graphql/mutations";
 import { GET_DEPARTMENTS_QUERY } from "@/graphql/queries";
+import { IDepartment, ISubDepartment } from "@/types/department";
 
 const departmentSchema = z.object({
   name: z.string().min(2, "Department name must be at least 2 characters"),
@@ -28,7 +29,8 @@ const departmentSchema = z.object({
 type DepartmentFormData = z.infer<typeof departmentSchema>;
 
 export default function DepartmentsPage() {
-  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+  const [selectedDepartment, setSelectedDepartment] =
+    useState<IDepartment | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const { loading, error, data, refetch } = useQuery(GET_DEPARTMENTS_QUERY);
@@ -74,7 +76,7 @@ export default function DepartmentsPage() {
     setSelectedDepartment(null);
   };
 
-  const handleEdit = (department: any) => {
+  const handleEdit = (department: IDepartment) => {
     setSelectedDepartment(department);
     setIsEditing(true);
   };
@@ -148,16 +150,18 @@ export default function DepartmentsPage() {
             </tr>
           </thead>
           <tbody>
-            {data.getDepartments.map((department: any) => (
+            {data.getDepartments.map((department: IDepartment) => (
               <tr key={department.id}>
                 <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
                   {department.name}
                 </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                  {department.subDepartments
-                    .map((subDept: any) => subDept.name)
-                    .join(", ")}
-                </td>
+                {department.subDepartments && (
+                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                    {department.subDepartments
+                      .map((subDept: ISubDepartment) => subDept.name)
+                      .join(", ")}
+                  </td>
+                )}
                 <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
                   <button
                     onClick={() => handleEdit(department)}
