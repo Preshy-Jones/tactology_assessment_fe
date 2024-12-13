@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function middleware(request: Request) {
+  //@ts-expect-error: cookies might be undefined
   const token = request.cookies.get("token")?.value;
 
   if (!token) {
@@ -11,7 +12,7 @@ export async function middleware(request: Request) {
 
   try {
     return NextResponse.next();
-  } catch (error: any) {
+  } catch {
     const url = new URL(request.url);
     url.pathname = "/login";
     return NextResponse.redirect(url);
