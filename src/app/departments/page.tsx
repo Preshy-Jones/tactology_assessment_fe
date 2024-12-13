@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -49,11 +49,20 @@ export default function DepartmentsPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentSchema),
+    defaultValues: {
+      subDepartments: [],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "subDepartments",
   });
 
   const onSubmit = (formData: DepartmentFormData) => {
@@ -67,7 +76,11 @@ export default function DepartmentsPage() {
     } else {
       createDepartment({
         variables: {
-          input: formData,
+          input: {
+            name: formData.name,
+            subDepartments:
+              formData.subDepartments?.map((sd) => ({ name: sd.name })) || [],
+          },
         },
       });
     }
@@ -109,6 +122,44 @@ export default function DepartmentsPage() {
           {errors.name && (
             <p className="text-red-500 text-xs italic">{errors.name.message}</p>
           )}
+        </div>
+
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-gray-700 text-sm font-bold">
+              Sub-Departments
+            </label>
+            <button
+              type="button"
+              onClick={() => append({ name: "" })}
+              className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm"
+            >
+              Add Sub-Department
+            </button>
+          </div>
+
+          {fields.map((field, index) => (
+            <div key={field.id} className="flex items-center mb-2">
+              <input
+                type="text"
+                {...register(`subDepartments.${index}.name`)}
+                placeholder="Sub-department name"
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
+              />
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-3 rounded"
+              >
+                Remove
+              </button>
+              {errors.subDepartments?.[index]?.name && (
+                <p className="text-red-500 text-xs italic ml-2">
+                  {errors.subDepartments[index]?.name?.message}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="flex items-center justify-between">
