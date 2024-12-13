@@ -149,8 +149,9 @@ export default function DepartmentsPage() {
               </th>
             </tr>
           </thead>
+          {/* <pre>{JSON.stringify(data)}</pre> */}
           <tbody>
-            {data.getDepartments.map((department: IDepartment) => (
+            {data.GetDepartments.map((department: IDepartment) => (
               <tr key={department.id}>
                 <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
                   {department.name}

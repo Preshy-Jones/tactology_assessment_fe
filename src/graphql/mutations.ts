@@ -14,7 +14,7 @@ export const LOGIN_MUTATION = gql`
 
 export const CREATE_DEPARTMENT_MUTATION = gql`
   mutation CreateDepartment($input: CreateDepartmentInput!) {
-    createDepartment(input: $input) {
+    CreateDepartment(input: $input) {
       id
       name
       subDepartments {
@@ -27,7 +27,7 @@ export const CREATE_DEPARTMENT_MUTATION = gql`
 
 export const UPDATE_DEPARTMENT_MUTATION = gql`
   mutation UpdateDepartment($id: Int!, $name: String!) {
-    updateDepartment(id: $id, name: $name) {
+    UpdateDepartment(id: $id, name: $name) {
       id
       name
     }
@@ -36,6 +36,6 @@ export const UPDATE_DEPARTMENT_MUTATION = gql`
 
 export const DELETE_DEPARTMENT_MUTATION = gql`
   mutation DeleteDepartment($id: Int!) {
-    deleteDepartment(id: $id)
+    DeleteDepartment(id: $id)
   }
 `;

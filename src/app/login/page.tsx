@@ -6,6 +6,7 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client";
 import { LOGIN_MUTATION } from "@/graphql/mutations";
+import { useEffect } from "react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -21,8 +22,16 @@ export default function LoginPage() {
   const [loginMutation] = useMutation(LOGIN_MUTATION, {
     onCompleted: (data) => {
       if (data.login.access_token) {
-        localStorage.setItem("token", data.login.access_token);
-        router.push("/departments");
+        // Ensure token is set in localStorage
+        if (typeof window !== "undefined") {
+          localStorage.setItem("token", data.login.access_token);
+
+          // Optional: Set token in a cookie for additional security
+          document.cookie = `token=${data.login.access_token}; path=/; secure; samesite=strict`;
+        }
+
+        // Force a full page reload to ensure Apollo Client picks up the new token
+        window.location.href = "/departments";
       }
     },
     onError: (error) => {

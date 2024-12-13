@@ -1,12 +1,32 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
+
+const httpLink = createHttpLink({
+  uri: process.env.NEXT_PUBLIC_BASE_API_URL,
+});
+
+const authLink = setContext((_, { headers }) => {
+  // Ensure this only runs on the client side
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : "",
+      },
+    };
+  }
+  return { headers };
+});
 
 const client = new ApolloClient({
-  uri: process.env.NEXT_PUBLIC_BASE_API_URL, // Your GraphQL API URL
+  link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
-  headers: {
-    Authorization: `Bearer ${
-      typeof window !== "undefined" ? localStorage.getItem("token") : ""
-    }`,
+  // Ensures client-side only operations
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: "cache-and-network",
+    },
   },
 });
 
