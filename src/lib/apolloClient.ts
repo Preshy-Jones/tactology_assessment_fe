@@ -28,6 +28,11 @@ const client = new ApolloClient({
       fetchPolicy: "cache-and-network",
     },
   },
+  credentials: "include", // or 'same-origin'
+  headers: {
+    "Content-Type": "application/json",
+    // Add any additional headers if needed
+  },
 });
 
 export default client;
