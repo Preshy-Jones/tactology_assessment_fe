@@ -37,13 +37,19 @@ const Departments = () => {
 
   const { loading, error, data, refetch } = useQuery(GET_DEPARTMENTS_QUERY);
 
-  const [createDepartment] = useMutation(CREATE_DEPARTMENT_MUTATION, {
-    onCompleted: () => refetch(),
-  });
+  const [createDepartment, { loading: createDepartmentLoading }] = useMutation(
+    CREATE_DEPARTMENT_MUTATION,
+    {
+      onCompleted: () => refetch(),
+    }
+  );
 
-  const [updateDepartment] = useMutation(UPDATE_DEPARTMENT_MUTATION, {
-    onCompleted: () => refetch(),
-  });
+  const [updateDepartment, { loading: updateDepartmentLoading }] = useMutation(
+    UPDATE_DEPARTMENT_MUTATION,
+    {
+      onCompleted: () => refetch(),
+    }
+  );
 
   const [deleteDepartment] = useMutation(DELETE_DEPARTMENT_MUTATION, {
     onCompleted: () => refetch(),
@@ -220,9 +226,16 @@ const Departments = () => {
         <div className="flex items-center justify-between">
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            disabled={loading}
+            className={`"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"`}
           >
-            {isEditing ? "Update Department" : "Create Department"}
+            {createDepartmentLoading || updateDepartmentLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : isEditing ? (
+              "Update Department"
+            ) : (
+              "Create Department"
+            )}
           </button>
           {isEditing && (
             <button
