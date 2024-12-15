@@ -1,6 +1,4 @@
-import React from "react";
-
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,15 +9,16 @@ import {
   DELETE_DEPARTMENT_MUTATION,
 } from "@/graphql/mutations";
 import { GET_DEPARTMENTS_QUERY } from "@/graphql/queries";
-import { IDepartment } from "@/types/department";
+import { IDepartment, PaginatedDepartments } from "@/types/department";
 import DepartmentsTable from "./DepartmentsTable";
+import DepartmentsPagination from "./DepartmentsPagination";
 
 const departmentSchema = z.object({
   name: z.string().min(2, "Department name must be at least 2 characters"),
   subDepartments: z
     .array(
       z.object({
-        id: z.number().optional(), // Add optional id for existing sub-departments
+        id: z.number().optional(),
         name: z
           .string()
           .min(2, "Sub-department name must be at least 2 characters"),
@@ -31,11 +30,14 @@ const departmentSchema = z.object({
 type DepartmentFormData = z.infer<typeof departmentSchema>;
 
 const Departments = () => {
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedDepartment, setSelectedDepartment] =
     useState<IDepartment | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const { loading, error, data, refetch } = useQuery(GET_DEPARTMENTS_QUERY);
+  const { loading, error, data, refetch } = useQuery(GET_DEPARTMENTS_QUERY, {
+    variables: { page: currentPage, limit: 10 },
+  });
 
   const [createDepartment, { loading: createDepartmentLoading }] = useMutation(
     CREATE_DEPARTMENT_MUTATION,
@@ -62,7 +64,6 @@ const Departments = () => {
     reset,
     setValue,
     formState: { errors },
-    // watch,
   } = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentSchema),
     defaultValues: {
@@ -77,15 +78,13 @@ const Departments = () => {
 
   const onSubmit = (formData: DepartmentFormData) => {
     if (isEditing && selectedDepartment) {
-      console.log("Updating department", formData);
-
       updateDepartment({
         variables: {
           id: Number(selectedDepartment.id),
           name: formData.name,
           subDepartments:
             formData.subDepartments?.map((sd) => ({
-              id: Number(sd.id), // This will be undefined for new sub-departments
+              id: Number(sd.id),
               name: sd.name,
             })) || [],
         },
@@ -106,21 +105,22 @@ const Departments = () => {
     setSelectedDepartment(null);
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    refetch({ page, limit: 10 });
+  };
+
   const handleEdit = (department: IDepartment) => {
     setSelectedDepartment(department);
     setIsEditing(true);
 
-    // Preset form values for editing
     setValue("name", department.name);
 
-    // Reset sub-departments and add existing ones
     if (department.subDepartments) {
-      // Clear existing fields
       while (fields.length !== 0) {
         remove(0);
       }
 
-      // Add existing sub-departments
       department.subDepartments.forEach((subDept) =>
         append({
           id: Number(subDept.id),
@@ -133,14 +133,10 @@ const Departments = () => {
   const handleDelete = (id: number) => {
     deleteDepartment({
       variables: {
-        id: Number(id), // Explicitly convert to a number
+        id: Number(id),
       },
     });
   };
-
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
 
   if (loading)
     return (
@@ -148,7 +144,11 @@ const Departments = () => {
         <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
       </div>
     );
+
   if (error) return <p>Error: {error.message}</p>;
+
+  const paginatedData = data?.GetDepartments as PaginatedDepartments;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Departments Management</h1>
@@ -227,7 +227,9 @@ const Departments = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`"bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"`}
+            className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+              loading ? "cursor-not-allowed bg-blue-400" : "hover:bg-blue-600"
+            }`}
           >
             {createDepartmentLoading || updateDepartmentLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -253,12 +255,19 @@ const Departments = () => {
         </div>
       </form>
 
-      {data && (
-        <DepartmentsTable
-          data={data}
-          handleDelete={handleDelete}
-          handleEdit={handleEdit}
-        />
+      {paginatedData && (
+        <>
+          <DepartmentsTable
+            data={{ GetDepartments: paginatedData.departments }}
+            handleDelete={handleDelete}
+            handleEdit={handleEdit}
+          />
+          <DepartmentsPagination
+            currentPage={paginatedData.page}
+            totalPages={paginatedData.totalPages}
+            onPageChange={handlePageChange}
+          />
+        </>
       )}
     </div>
   );

@@ -9,7 +9,7 @@ const DepartmentsTable: React.FC<{
   handleDelete: (id: number) => void;
 }> = ({ data, handleDelete, handleEdit }) => {
   return (
-    <div className="bg-white shadow-md rounded">
+    <div className="bg-white shadow-md rounded mb-4">
       <table className="min-w-full">
         <thead>
           <tr>
@@ -24,7 +24,6 @@ const DepartmentsTable: React.FC<{
             </th>
           </tr>
         </thead>
-        {/* <pre>{JSON.stringify(data)}</pre> */}
         <tbody>
           {data.GetDepartments.map((department: IDepartment) => (
             <tr key={department.id}>
